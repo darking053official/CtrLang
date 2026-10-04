@@ -1,0 +1,17 @@
+# sayfa.ctr
+sunucu başlat(3000)
+
+sayfa "/" {
+    html {
+        başlık "Hoş geldiniz"
+        paragraf "CtrLang ile yazılmış ilk sayfa"
+        düğme "Tıkla"
+    }
+}
+
+sayfa "/hakkinda" {
+    html {
+        başlık "Hakkında"
+        paragraf "CtrLang bir Türkçe web dilidir"
+    }
+}
