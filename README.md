@@ -1,6 +1,8 @@
 <div align="center">
+
+<img src="logo_ctr.png" width="150" alt="DeepSeek" style="border-radius: 50%; overflow: hidden; background: #0d1117;">
     
-# 🌐 CtrLang
+# CtrLang
 
 ### Türkçe Backend Web Dili
 
