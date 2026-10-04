@@ -53,3 +53,11 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Derlenmiş binary
+ctrc
+ornekler/merhaba
+ornekler/sayfa
+
+# Üretilen C kodu
+*.ctr.c
