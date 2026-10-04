@@ -1,0 +1,165 @@
+name: CtrLang Derleme
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  derle:
+    name: Derle (${{ matrix.platform.hedef }})
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - hedef: linux-x64
+            os: ubuntu-latest
+            cc: gcc
+            cikti: ctrc
+            paket: ctrc-linux-x64.tar.gz
+
+          - hedef: linux-arm64
+            os: ubuntu-latest
+            cc: aarch64-linux-gnu-gcc
+            cikti: ctrc
+            paket: ctrc-linux-arm64.tar.gz
+
+          - hedef: macos-x64
+            os: macos-13
+            cc: clang
+            cikti: ctrc
+            paket: ctrc-macos-x64.tar.gz
+
+          - hedef: macos-arm64
+            os: macos-14
+            cc: clang
+            cikti: ctrc
+            paket: ctrc-macos-arm64.tar.gz
+
+          - hedef: windows-x64
+            os: windows-latest
+            cc: gcc
+            cikti: ctrc.exe
+            paket: ctrc-windows-x64.zip
+
+    steps:
+      - name: Kodu çek
+        uses: actions/checkout@v4
+
+      - name: Linux ARM64 araçlarını kur
+        if: matrix.platform.hedef == 'linux-arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Windows için MinGW kur
+        if: matrix.platform.hedef == 'windows-x64'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            mingw-w64-x86_64-gcc
+            make
+
+      - name: Linux/macOS derle
+        if: matrix.platform.os != 'windows-latest'
+        run: |
+          make CC=${{ matrix.platform.cc }} || \
+          ${{ matrix.platform.cc }} -std=c11 -O2 -w \
+            -Isrc -Ikutuphane \
+            -Ivendor/mongoose -Ivendor/sqlite \
+            -Ivendor/cjson -Ivendor/sds -Ivendor/uthash \
+            src/*.c -o ${{ matrix.platform.cikti }} \
+            -lpthread -lm -ldl
+
+      - name: Windows derle
+        if: matrix.platform.os == 'windows-latest'
+        shell: msys2 {0}
+        run: |
+          gcc -std=c11 -O2 -w \
+            -Isrc -Ikutuphane \
+            -Ivendor/mongoose -Ivendor/sqlite \
+            -Ivendor/cjson -Ivendor/sds -Ivendor/uthash \
+            src/*.c -o ${{ matrix.platform.cikti }} \
+            -lws2_32 -lpthread
+
+      - name: Paketle (Linux/macOS)
+        if: matrix.platform.os != 'windows-latest'
+        run: |
+          mkdir -p paket
+          cp ${{ matrix.platform.cikti }} paket/
+          cp kur.sh paket/ 2>/dev/null || true
+          cp -r ornekler paket/ 2>/dev/null || true
+          cd paket
+          tar -czf ../${{ matrix.platform.paket }} *
+
+      - name: Paketle (Windows)
+        if: matrix.platform.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path paket
+          Copy-Item ${{ matrix.platform.cikti }} paket\
+          Copy-Item kur.bat paket\ -ErrorAction SilentlyContinue
+          Copy-Item ornekler paket\ -Recurse -ErrorAction SilentlyContinue
+          Compress-Archive -Path paket\* -DestinationPath ${{ matrix.platform.paket }}
+
+      - name: Yükle (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.hedef }}
+          path: ${{ matrix.platform.paket }}
+
+  yayinla:
+    name: Release Oluştur
+    needs: derle
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Kodu çek
+        uses: actions/checkout@v4
+
+      - name: Binary'leri indir
+        uses: actions/download-artifact@v4
+        with:
+          path: indirilen
+
+      - name: Release oluştur
+        uses: softprops/action-gh-release@v2
+        with:
+          files: indirilen/**/*
+          generate_release_notes: true
+          body: |
+            ## CtrLang ${{ github.ref_name }}
+
+            Türkçe backend web dili — Saf C + SQLite + Mongoose
+
+            ### İndir
+
+            | Platform | Dosya |
+            |----------|-------|
+            | 🐧 Linux x64 | `ctrc-linux-x64.tar.gz` |
+            | 🐧 Linux ARM64 | `ctrc-linux-arm64.tar.gz` |
+            | 🍎 macOS x64 | `ctrc-macos-x64.tar.gz` |
+            | 🍎 macOS ARM64 | `ctrc-macos-arm64.tar.gz` |
+            | 🪟 Windows | `ctrc-windows-x64.zip` |
+
+            ### Kurulum
+
+            **Linux/macOS:**
+            ```bash
+            tar -xzf ctrc-linux-x64.tar.gz
+            ./kur.sh
+            ```
+
+            **Windows:**
+            ```
+            ctrc-windows-x64.zip'i çıkart
+            kur.bat çalıştır
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
