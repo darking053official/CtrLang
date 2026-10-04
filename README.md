@@ -1,124 +1,113 @@
-<div align="center">
+<img src="logo_ctr.png" width="120" alt="CtrLang" style="background: transparent;">
 
-<img src="logo_ctr.png" width="150" alt="DeepSeek" style="border-radius: 50%; overflow: hidden; background: #0d1117;">
-    
 # CtrLang
 
-### Türkçe Backend Web Dili
+> **Türkçe backend web dili** — Saf C, SQLite, her platformda.
 
-**Saf C ile yazıldı. SQLite ile güçlendirildi. Her platformda çalışır.**
-
-<br>
-
-[![Lisans](https://img.shields.io/badge/Lisans-GPLv3-blue.svg)](LICENSE)
+[![Lisans: GPL v3](https://img.shields.io/badge/Lisans-GPLv3-blue.svg)](LICENSE)
 [![C11](https://img.shields.io/badge/C-C11-blue.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Android-green.svg)]()
-[![Sürüm](https://img.shields.io/badge/Sürüm-0.2.0-orange.svg)]()
+[![Sürüm](https://img.shields.io/badge/Sürüm-0.2.0-orange.svg)](https://github.com/darking053official/CtrLang/releases)
 
-<br>
-
-<a href="#-nedir">Nedir?</a> ·
-<a href="#-özellikler">Özellikler</a> ·
-<a href="#-kurulum">Kurulum</a> ·
-<a href="#-kullanım">Kullanım</a> ·
-<a href="#-dil-referansı">Dil</a>
-
-</div>
+[Site](https://darking053official.github.io/CtrLang/) · [Özellikler](#özellikler) · [Kurulum](#kurulum) · [Dil Referansı](#dil-referansı) · [Örnekler](#örnekler)
 
 ---
 
-<h2 id="-nedir">🎯 Nedir?</h2>
+## Nedir?
 
-<p><b>CtrLang</b>, Türkçe anahtar kelimelerle yazılan bir <b>backend web dilidir</b>. PHP ve Node.js'in Türkçe alternatifi olmayı hedefler.</p>
+**CtrLang**, Türkçe anahtar kelimelerle yazılan bir **backend web dilidir**. PHP ve Node.js'in Türkçe alternatifi olmayı hedefler.
 
-<pre><code>sunucu başlat(3000)
+```ctrlang
+sunucu başlat(3000)
 
 sayfa "/" {
     yazdır "Merhaba CtrLang!"
-}</code></pre>
+}
+```
 
-<p><b>Çalıştır:</b></p>
+Çalıştır:
 
-<pre><code>ctr run merhaba.ctr</code></pre>
+```bash
+ctr run merhaba.ctr
+```
 
-<p>Tarayıcıda: <code>http://localhost:3000</code></p>
-
----
-
-<h2 id="-özellikler">✨ Özellikler</h2>
-
-<table>
-<tr>
-<td>🇹🇷 <b>Türkçe sözdizimi</b></td>
-<td><code>yazdır</code>, <code>eğer</code>, <code>döngü</code>, <code>işlev</code></td>
-</tr>
-<tr>
-<td>⚡ <b>Saf C</b></td>
-<td>Hızlı, hafif (~2 MB bellek)</td>
-</tr>
-<tr>
-<td>🗄️ <b>SQLite</b></td>
-<td>Yerleşik veritabanı</td>
-</tr>
-<tr>
-<td>🌐 <b>HTTP sunucu</b></td>
-<td>Mongoose ile</td>
-</tr>
-<tr>
-<td>🎨 <b>HTML + JSON</b></td>
-<td>Yerleşik üretim</td>
-</tr>
-<tr>
-<td>🛣️ <b>Dinamik rotalar</b></td>
-<td><code>/kullanici/{id}</code></td>
-</tr>
-<tr>
-<td>🌍 <b>Çapraz platform</b></td>
-<td>Linux, macOS, Windows, Android</td>
-</tr>
-</table>
+Tarayıcıda: http://localhost:3000
 
 ---
 
-<h2 id="-kurulum">📦 Kurulum</h2>
+Özellikler
 
-<h3>🐧 Linux / 🍎 macOS / 🤖 Termux</h3>
+· Türkçe sözdizimi — yazdır, eğer, döngü, işlev
 
-<pre><code>git clone https://github.com/darking053official/CtrLang.git
+· Saf C — Hızlı, hafif (~2 MB bellek)
+
+· SQLite — Yerleşik veritabanı
+
+· HTTP sunucu — Mongoose ile gerçek web sunucusu
+
+· HTML + JSON — Yerleşik üretim
+
+· Dinamik rotalar — /kullanici/{id}
+
+· Çapraz platform — Linux, macOS, Windows, Android
+
+---
+
+Kurulum
+
+Tek Komut (Linux / macOS / Termux)
+
+```bash
+curl -fsSL https://darking053official.github.io/CtrLang/install.sh | sh
+```
+
+Manuel
+
+```bash
+git clone https://github.com/darking053official/CtrLang.git
 cd CtrLang
-./kur.sh</code></pre>
+./kur.sh
+```
 
-<h3>🪟 Windows</h3>
+Windows
 
-<pre><code>git clone https://github.com/darking053official/CtrLang.git
+```cmd
+git clone https://github.com/darking053official/CtrLang.git
 cd CtrLang
-kur.bat</code></pre>
+kur.bat
+```
 
 ---
 
-<h2 id="-kullanım">📖 Kullanım</h2>
+Kullanım
 
-<pre><code>ctr new blogum           # Yeni proje
+```bash
+ctr new blogum           # Yeni proje oluştur
 ctr run app.ctr          # Derle ve çalıştır
 ctr run app.ctr -p 8080  # Port belirt
-ctr run app.ctr -h 0.0.0.0
+ctr build app.ctr        # C'ye çevir ve derle
+ctr check app.ctr        # Sözdizimi kontrol
 ctr listele              # Tüm komutlar
-ctr update               # Güncelle</code></pre>
+ctr update               # Güncelle
+```
 
 ---
 
-<h2 id="-dil-referansı">🔤 Dil Referansı</h2>
+Dil Referansı
 
-<h3>Değişkenler</h3>
+Değişkenler
 
-<pre><code>sayı x = 10
+```ctrlang
+sayı x = 10
 metin isim = "Ali"
 mantık aktif = doğru
-liste yazilar = veritabanı.sorgu("SELECT * FROM yazilar")</code></pre>
+liste yazilar = veritabanı.sorgu("SELECT * FROM yazilar")
+```
 
-<h3>Kontrol</h3>
+Kontrol
 
-<pre><code>eğer x > 5 {
+```ctrlang
+eğer x > 5 {
     yazdır "Büyük"
 } değilse {
     yazdır "Küçük"
@@ -126,17 +115,21 @@ liste yazilar = veritabanı.sorgu("SELECT * FROM yazilar")</code></pre>
 
 döngü i = 0, i < 10, i = i + 1 {
     yazdır i
-}</code></pre>
+}
+```
 
-<h3>İşlevler</h3>
+İşlevler
 
-<pre><code>işlev topla(a, b) {
+```ctrlang
+işlev topla(a, b) {
     döndür a + b
-}</code></pre>
+}
+```
 
-<h3>Web</h3>
+Web
 
-<pre><code>sunucu başlat(3000)
+```ctrlang
+sunucu başlat(3000)
 
 sayfa "/" {
     yazdır "Ana sayfa"
@@ -144,68 +137,133 @@ sayfa "/" {
 
 sayfa "/kullanici/{id}" {
     yazdır "Kullanıcı: " + id
-}</code></pre>
+}
+```
 
-<h3>HTML</h3>
+HTML
 
-<pre><code>html {
+```ctrlang
+html {
     başlık "Hoş geldin"
     paragraf "CtrLang ile yazıldı"
     düğme "Tıkla"
-}</code></pre>
+}
+```
 
-<h3>Veritabanı</h3>
+Veritabanı
 
-<pre><code>veritabanı bağlan("blog.db")
-veritabanı.çalıştır("CREATE TABLE IF NOT EXISTS yazilar (id INTEGER PRIMARY KEY)")
-liste yazilar = veritabanı.sorgu("SELECT * FROM yazilar")</code></pre>
-
----
-
-<h2>📋 Yol Haritası</h2>
-
-<ul>
-<li>✅ Lexer, Parser, AST</li>
-<li>✅ C kodu üretici</li>
-<li>✅ HTTP sunucu + HTML + JSON</li>
-<li>✅ SQLite + dinamik rotalar</li>
-<li>✅ Çapraz platform</li>
-<li>⬜ Standart kütüphane</li>
-<li>⬜ Şablon motoru</li>
-<li>⬜ WebSocket</li>
-<li>⬜ v1.0</li>
-</ul>
+```ctrlang
+veritabanı bağlan("blog.db")
+veritabanı.çalıştır("CREATE TABLE IF NOT EXISTS yazilar (id INTEGER PRIMARY KEY, baslik TEXT)")
+liste yazilar = veritabanı.sorgu("SELECT * FROM yazilar")
+```
 
 ---
 
-<h2>📜 Lisans</h2>
+Örnekler
 
-<p><b>GNU General Public License v3.0</b> — <a href="LICENSE">LICENSE</a></p>
+Merhaba Dünya
 
-<table>
-<tr><th>Kütüphane</th><th>Lisans</th></tr>
-<tr><td>Mongoose</td><td>GPL v2</td></tr>
-<tr><td>SQLite</td><td>Public Domain</td></tr>
-<tr><td>cJSON</td><td>MIT</td></tr>
-<tr><td>sds</td><td>BSD</td></tr>
-<tr><td>uthash</td><td>BSD</td></tr>
-</table>
+```ctrlang
+sunucu başlat(3000)
+
+sayfa "/" {
+    yazdır "Merhaba CtrLang!"
+}
+```
+
+SQLite Blog
+
+```ctrlang
+veritabanı bağlan("blog.db")
+
+veritabanı.çalıştır("CREATE TABLE IF NOT EXISTS yazilar (id INTEGER PRIMARY KEY, baslik TEXT)")
+
+sunucu başlat(3000)
+
+sayfa "/" {
+    liste yazilar = veritabanı.sorgu("SELECT * FROM yazilar")
+    html {
+        başlık "Blogum"
+        her yazi içinde yazilar {
+            paragraf yazi.baslik
+        }
+    }
+}
+```
 
 ---
 
-<h2>👥 Katkıda Bulunanlar</h2>
+Mimari
 
-<ul>
-<li><b>darking053official</b> — Proje sahibi</li>
-<li><b>Deepseek</b> — AI asistan, kod geliştirme</li>
-</ul>
+```
+.ctr dosyası
+    ↓
+[ Lexer ]      → Token
+    ↓
+[ Parser ]     → AST
+    ↓
+[ Üretici ]    → C kodu
+    ↓
+[ gcc ]        → Yerel binary
+    ↓
+HTTP Sunucu + SQLite
+```
 
 ---
 
-<div align="center">
+Proje Yapısı
 
-<h3>⭐ Beğendiyseniz yıldız verin!</h3>
+```
+CtrLang/
+├── src/                    # Derleyici (C)
+├── kutuphane/              # Runtime
+├── vendor/                 # Harici kütüphaneler
+├── ornekler/               # .ctr örnekleri
+├── kur.sh                  # Linux/macOS/Termux
+├── kur.bat                 # Windows CMD
+├── kur.ps1                 # Windows PowerShell
+└── Makefile
+```
 
-<p>🇹🇷 <b>Türkçe programlama için bir adım.</b></p>
+---
 
-</div>
+Yol Haritası
+
+☑ Lexer, Parser, AST
+
+☑ C kodu üretici
+
+☑ HTTP sunucu + HTML + JSON
+
+☑ SQLite + dinamik rotalar
+
+☑ Çapraz platform
+
+☐ Standart kütüphane
+
+☐ Şablon motoru
+
+☐ WebSocket
+
+☐ v1.0
+
+---
+
+Lisans
+
+GNU General Public License v3.0 — LICENSE
+
+Kullanılan kütüphaneler: Mongoose (GPL v2), SQLite (Public Domain), cJSON (MIT), sds (BSD), uthash (BSD).
+
+---
+
+Katkıda Bulunanlar
+
+· darking053official — Proje sahibi
+
+· DeepSeek — AI asistan, kod geliştirme
+
+---
+
+Türkçe programlama için bir adım.
