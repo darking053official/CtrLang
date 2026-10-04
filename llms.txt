@@ -1,0 +1,29 @@
+# CtrLang
+
+> Türkçe backend web dili. Saf C, SQLite, Mongoose.
+
+## Dokümantasyon
+- [README](https://github.com/darking053official/CtrLang/blob/main/README.md)
+- [Dil Referansı](https://github.com/darking053official/CtrLang/blob/main/docs/dil-referansi.md)
+- [Gramer](https://github.com/darking053official/CtrLang/blob/main/docs/gramer.md)
+- [Örnekler](https://github.com/darking053official/CtrLang/tree/main/ornekler)
+
+## Nedir
+CtrLang, Türkçe anahtar kelimelerle yazılan bir backend web dilidir.
+PHP ve Node.js'in Türkçe alternatifi.
+
+## Örnek
+```ctrlang
+sunucu başlat(3000)
+sayfa "/" {
+    yazdır "Merhaba"
+}
+```
+
+Kurulum
+
+curl -fsSL https://darking053official.github.io/CtrLang/install.sh | sh
+
+Lisans
+
+GPL-3.0
