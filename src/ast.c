@@ -90,3 +90,15 @@ void ast_yazdir(ASTDugum *d, int g) {
         case AST_BLOK:
             for (int i = 0; i < d->veri.blok.deyimler->sayi; i++)
                 ast_yazdir(d->veri.blok.deyimler->dugumler[i], g+1);
+            break;
+        case AST_SAYFA:
+            ast_yazdir(d->veri.sayfa.govde, g+1);
+            break;
+        case AST_EGER:
+            ast_yazdir(d->veri.eger.kosul, g+1);
+            ast_yazdir(d->veri.eger.o_zaman, g+1);
+            if (d->veri.eger.degilse) ast_yazdir(d->veri.eger.degilse, g+1);
+            break;
+        default: break;
+    }
+}
