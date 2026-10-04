@@ -1,6 +1,5 @@
 #include "ctr_calisma.h"
 #include "ctr_veritabani.h"
-#include "ctr_json.h"
 #include "mongoose.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +17,6 @@ typedef struct {
 
 static SayfaKayit sayfalar[MAX_SAYFA];
 static int sayfa_sayi = 0;
-
 static int sunucu_port = 8080;
 static char sunucu_host[128] = "0.0.0.0";
 
@@ -45,6 +43,39 @@ double ctr_env_port(const char *isim, double varsayilan) {
     if (port <= 0 || port > 65535) return varsayilan;
     return port;
 }
+
+/* ============ LİSTE ============ */
+
+ctr_liste* ctr_liste_olustur(void) {
+    ctr_liste *l = malloc(sizeof(ctr_liste));
+    l->sayi = 0;
+    l->kapasite = 8;
+    l->elemanlar = malloc(sizeof(char*) * l->kapasite);
+    return l;
+}
+
+void ctr_liste_ekle(ctr_liste *l, const char *eleman) {
+    if (!l || !eleman) return;
+    if (l->sayi >= l->kapasite) {
+        l->kapasite *= 2;
+        l->elemanlar = realloc(l->elemanlar, sizeof(char*) * l->kapasite);
+    }
+    l->elemanlar[l->sayi++] = strdup(eleman);
+}
+
+const char* ctr_liste_al(ctr_liste *l, int indeks) {
+    if (!l || indeks < 0 || indeks >= l->sayi) return "";
+    return l->elemanlar[indeks];
+}
+
+void ctr_liste_sil(ctr_liste *l) {
+    if (!l) return;
+    for (int i = 0; i < l->sayi; i++) free(l->elemanlar[i]);
+    free(l->elemanlar);
+    free(l);
+}
+
+/* ============ CEVAP ============ */
 
 static void cevap_temizle(void) {
     cevap_uzunluk = 0;
@@ -82,7 +113,8 @@ void ctr_sayfa_ekle(const char *yol, const char *yontem,
     sayfa_sayi++;
 }
 
-/* HTML */
+/* ============ HTML ============ */
+
 void ctr_html_baslat(ctr_istek *istek) {
     (void)istek;
     cevap_temizle();
@@ -102,7 +134,8 @@ void ctr_html_metin(ctr_istek *istek, const char *metin) {
     (void)istek; if (metin) cevap_ekle(metin);
 }
 
-/* JSON */
+/* ============ JSON ============ */
+
 void ctr_json_baslat(ctr_istek *istek) {
     (void)istek;
     cevap_temizle();
@@ -117,15 +150,9 @@ void ctr_json_ekle(ctr_istek *istek, const char *anahtar, const char *deger) {
     cevap_ekle(anahtar);
     cevap_ekle("\":\"");
     for (const char *p = deger; *p; p++) {
-        if (*p == '"' || *p == '\\') {
-            char buf[3] = { '\\', *p, 0 };
-            cevap_ekle(buf);
-        } else if (*p == '\n') {
-            cevap_ekle("\\n");
-        } else {
-            char buf[2] = { *p, 0 };
-            cevap_ekle(buf);
-        }
+        if (*p == '"' || *p == '\\') { char buf[3] = { '\\', *p, 0 }; cevap_ekle(buf); }
+        else if (*p == '\n') cevap_ekle("\\n");
+        else { char buf[2] = { *p, 0 }; cevap_ekle(buf); }
     }
     cevap_ekle("\"");
 }
@@ -138,7 +165,8 @@ void ctr_json_ekle_sayi(ctr_istek *istek, const char *anahtar, double deger) {
     cevap_ekle(ctr_sayi_metin(deger));
 }
 
-/* Yönlendir / Durum */
+/* ============ YÖNLENDİR / DURUM ============ */
+
 void ctr_yonlendir(ctr_istek *istek, const char *yol) {
     (void)istek;
     cevap_durum = 302;
@@ -147,7 +175,8 @@ void ctr_yonlendir(ctr_istek *istek, const char *yol) {
 }
 void ctr_durum(ctr_istek *istek, int kod) { (void)istek; cevap_durum = kod; }
 
-/* İstek */
+/* ============ İSTEK ============ */
+
 const char* ctr_istek_form(ctr_istek *istek, const char *isim) {
     if (!istek) return "";
     for (int i = 0; i < istek->form_sayi; i++)
@@ -167,7 +196,8 @@ const char* ctr_istek_tip(ctr_istek *istek) {
     return istek->yontem;
 }
 
-/* URL decode */
+/* ============ YARDIMCI ============ */
+
 static void url_decode(char *cikti, const char *girdi, size_t max) {
     size_t j = 0;
     for (size_t i = 0; girdi[i] && j < max - 1; i++) {
@@ -175,11 +205,8 @@ static void url_decode(char *cikti, const char *girdi, size_t max) {
             char hex[3] = { girdi[i+1], girdi[i+2], 0 };
             cikti[j++] = (char)strtol(hex, NULL, 16);
             i += 2;
-        } else if (girdi[i] == '+') {
-            cikti[j++] = ' ';
-        } else {
-            cikti[j++] = girdi[i];
-        }
+        } else if (girdi[i] == '+') cikti[j++] = ' ';
+        else cikti[j++] = girdi[i];
     }
     cikti[j] = '\0';
 }
@@ -224,7 +251,6 @@ static void sorgu_coz(ctr_istek *istek, const char *veri) {
     }
 }
 
-/* Rota eşleştirme (dinamik: /kullanici/{id}) */
 static int rota_esles(const char *sablon, const char *yol, ctr_istek *istek) {
     if (strcmp(sablon, yol) == 0) return 1;
     const char *s = sablon;
@@ -262,7 +288,8 @@ static int rota_esles(const char *sablon, const char *yol, ctr_istek *istek) {
     return *s == '\0' && *y == '\0';
 }
 
-/* Mongoose olay işleyici */
+/* ============ MONGOOSE ============ */
+
 static void olay_isle(struct mg_connection *c, int ev, void *ev_data) {
     if (ev != MG_EV_HTTP_MSG) return;
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
@@ -331,7 +358,6 @@ static void olay_isle(struct mg_connection *c, int ev, void *ev_data) {
     mg_http_reply(c, cevap_durum, basliklar, "%s", cevap_tamponu);
 }
 
-/* Sunucu */
 void ctr_sunucu_baslat(double port, const char *host) {
     sunucu_port = (int)port;
     if (host && *host) {

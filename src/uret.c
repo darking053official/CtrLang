@@ -14,11 +14,9 @@ static Degisken degiskenler[MAX_DEGISKEN];
 static int degisken_sayi = 0;
 
 static const char* degisken_tip_bul(const char *isim) {
-    for (int i = 0; i < degisken_sayi; i++) {
-        if (strcmp(degiskenler[i].isim, isim) == 0) {
+    for (int i = 0; i < degisken_sayi; i++)
+        if (strcmp(degiskenler[i].isim, isim) == 0)
             return degiskenler[i].tip;
-        }
-    }
     return NULL;
 }
 
@@ -41,11 +39,8 @@ void uret_baslat(FILE *f) {
     fprintf(f, "#include \"ctr_calisma.h\"\n\n");
 }
 
-void uret_bitir(FILE *f) {
-    fprintf(f, "\n");
-}
+void uret_bitir(FILE *f) { fprintf(f, "\n"); }
 
-/* İfade üret */
 static void uret_ifade(FILE *f, ASTDugum *d) {
     if (!d) { fprintf(f, "0"); return; }
 
@@ -53,8 +48,7 @@ static void uret_ifade(FILE *f, ASTDugum *d) {
         case AST_SAYI:
             if (d->veri.sayi.deger == (int)d->veri.sayi.deger)
                 fprintf(f, "%d", (int)d->veri.sayi.deger);
-            else
-                fprintf(f, "%g", d->veri.sayi.deger);
+            else fprintf(f, "%g", d->veri.sayi.deger);
             break;
 
         case AST_METIN:
@@ -68,20 +62,24 @@ static void uret_ifade(FILE *f, ASTDugum *d) {
             fprintf(f, "\"");
             break;
 
-        case AST_DOGRU:
-            fprintf(f, "1");
-            break;
-
-        case AST_YANLIS:
-            fprintf(f, "0");
-            break;
+        case AST_DOGRU: fprintf(f, "1"); break;
+        case AST_YANLIS: fprintf(f, "0"); break;
 
         case AST_ISIM: {
             const char *tip = degisken_tip_bul(d->veri.isim.isim);
             if (tip && strcmp(tip, "double") == 0)
                 fprintf(f, "ctr_sayi_metin(%s)", d->veri.isim.isim);
-            else
-                fprintf(f, "%s", d->veri.isim.isim);
+            else fprintf(f, "%s", d->veri.isim.isim);
+            break;
+        }
+
+        case AST_INDEKS: {
+            if (d->veri.indeks.nesne->tip == AST_ISIM) {
+                fprintf(f, "ctr_liste_al(%s, ",
+                        d->veri.indeks.nesne->veri.isim.isim);
+                uret_ifade(f, d->veri.indeks.indeks);
+                fprintf(f, ")");
+            } else fprintf(f, "\"\"");
             break;
         }
 
@@ -107,20 +105,63 @@ static void uret_ifade(FILE *f, ASTDugum *d) {
 
         case AST_CAGRI: {
             if (d->veri.cagri.hedef->tip == AST_ISIM) {
-                fprintf(f, "%s(", d->veri.cagri.hedef->veri.isim.isim);
+                const char *ad = d->veri.cagri.hedef->veri.isim.isim;
+                fprintf(f, "%s(", ad);
                 for (int i = 0; i < d->veri.cagri.argumanlar->sayi; i++) {
                     if (i > 0) fprintf(f, ", ");
                     uret_ifade(f, d->veri.cagri.argumanlar->dugumler[i]);
                 }
                 fprintf(f, ")");
+            } else if (d->veri.cagri.hedef->tip == AST_ERISIM) {
+                ASTDugum *er = d->veri.cagri.hedef;
+                if (er->veri.erisim.nesne->tip == AST_ISIM) {
+                    const char *nesne = er->veri.erisim.nesne->veri.isim.isim;
+                    const char *alan = er->veri.erisim.alan;
+
+                    if (strcmp(nesne, "veritabanı") == 0) {
+                        if (strcmp(alan, "sorgu") == 0)
+                            fprintf(f, "ctr_veritabani_sorgu(");
+                        else if (strcmp(alan, "çalıştır") == 0)
+                            fprintf(f, "ctr_veritabani_calistir(");
+                        else
+                            fprintf(f, "ctr_veritabani_%s(", alan);
+                    } else if (strcmp(nesne, "istek") == 0) {
+                        if (strcmp(alan, "form") == 0)
+                            fprintf(f, "ctr_istek_form(istek, ");
+                        else if (strcmp(alan, "sorgu") == 0)
+                            fprintf(f, "ctr_istek_sorgu(istek, ");
+                        else
+                            fprintf(f, "ctr_istek_%s(", alan);
+                    } else {
+                        fprintf(f, "%s_%s(", nesne, alan);
+                    }
+
+                    for (int i = 0; i < d->veri.cagri.argumanlar->sayi; i++) {
+                        if (i > 0) fprintf(f, ", ");
+                        uret_ifade(f, d->veri.cagri.argumanlar->dugumler[i]);
+                    }
+                    fprintf(f, ")");
+                }
             }
             break;
         }
 
-        case AST_ERISIM:
-            uret_ifade(f, d->veri.erisim.nesne);
-            fprintf(f, ".%s", d->veri.erisim.alan);
+        case AST_ERISIM: {
+            ASTDugum *nesne = d->veri.erisim.nesne;
+            const char *alan = d->veri.erisim.alan;
+            if (nesne->tip == AST_ISIM) {
+                const char *ad = nesne->veri.isim.isim;
+                if (strcmp(ad, "istek") == 0) {
+                    if (strcmp(alan, "tip") == 0) fprintf(f, "istek->yontem");
+                    else fprintf(f, "istek->%s", alan);
+                } else if (strcmp(ad, "veritabanı") == 0) {
+                    fprintf(f, "/* veritabanı.%s */", alan);
+                } else {
+                    fprintf(f, "%s.%s", ad, alan);
+                }
+            }
             break;
+        }
 
         case AST_HTML_ETIKET:
             fprintf(f, "\"\"");
@@ -132,15 +173,13 @@ static void uret_ifade(FILE *f, ASTDugum *d) {
     }
 }
 
-/* Deyim üret */
 void uret_dugum(FILE *f, ASTDugum *d, int g) {
     if (!d) return;
 
     switch (d->tip) {
         case AST_BLOK:
-            for (int i = 0; i < d->veri.blok.deyimler->sayi; i++) {
+            for (int i = 0; i < d->veri.blok.deyimler->sayi; i++)
                 uret_dugum(f, d->veri.blok.deyimler->dugumler[i], g);
-            }
             break;
 
         case AST_YAZDIR:
@@ -152,13 +191,21 @@ void uret_dugum(FILE *f, ASTDugum *d, int g) {
 
         case AST_ATAMA: {
             girinti_yaz(f, g);
-
             const char *c_tip = "double";
             if (d->veri.atama.tip) {
                 if (strcmp(d->veri.atama.tip, "metin") == 0) c_tip = "char*";
                 else if (strcmp(d->veri.atama.tip, "mantık") == 0) c_tip = "int";
+                else if (strcmp(d->veri.atama.tip, "liste") == 0) c_tip = "ctr_liste*";
             } else {
                 if (d->veri.atama.deger->tip == AST_METIN) c_tip = "char*";
+                else if (d->veri.atama.deger->tip == AST_CAGRI) {
+                    ASTDugum *h = d->veri.atama.deger->veri.cagri.hedef;
+                    if (h->tip == AST_ERISIM &&
+                        h->veri.erisim.nesne->tip == AST_ISIM &&
+                        strcmp(h->veri.erisim.nesne->veri.isim.isim, "veritabanı") == 0) {
+                        c_tip = "ctr_liste*";
+                    }
+                }
             }
 
             if (!degisken_tip_bul(d->veri.atama.isim)) {
@@ -254,7 +301,6 @@ void uret_dugum(FILE *f, ASTDugum *d, int g) {
         case AST_SUNUCU:
             girinti_yaz(f, g);
             fprintf(f, "ctr_sunucu_baslat(");
-
             if (g_port > 0) {
                 fprintf(f, "%d", g_port);
             } else if (g_port_env[0]) {
@@ -264,49 +310,43 @@ void uret_dugum(FILE *f, ASTDugum *d, int g) {
             } else {
                 uret_ifade(f, d->veri.sunucu.port);
             }
-
+            fprintf(f, ", ");
+            if (g_host[0]) fprintf(f, "\"%s\"", g_host);
+            else fprintf(f, "\"0.0.0.0\"");
             fprintf(f, ");\n");
             break;
 
         case AST_SAYFA: {
             static int sayfa_no = 0;
             int bu_no = sayfa_no++;
-
-            /* Fonksiyon önce (prototip main'de) */
-            /* main içine kayıt */
             girinti_yaz(f, g);
             fprintf(f, "ctr_sayfa_ekle(\"");
-
             for (size_t i = 0; d->veri.sayfa.yol[i]; i++) {
                 char c = d->veri.sayfa.yol[i];
                 if (c == '"' || c == '\\') fprintf(f, "\\%c", c);
                 else fprintf(f, "%c", c);
             }
             fprintf(f, "\", ");
-
             if (d->veri.sayfa.yontem)
                 fprintf(f, "\"%s\", ", d->veri.sayfa.yontem);
             else
                 fprintf(f, "\"GET\", ");
-
             fprintf(f, "sayfa_%d);\n", bu_no);
             break;
         }
 
-        case AST_HTML_BLOK: {
+        case AST_HTML_BLOK:
             girinti_yaz(f, g);
             fprintf(f, "ctr_html_baslat(istek);\n");
-            for (int i = 0; i < d->veri.html_blok.etiketler->sayi; i++) {
+            for (int i = 0; i < d->veri.html_blok.etiketler->sayi; i++)
                 uret_dugum(f, d->veri.html_blok.etiketler->dugumler[i], g);
-            }
             girinti_yaz(f, g);
             fprintf(f, "ctr_html_bitir(istek);\n");
             break;
-        }
 
         case AST_HTML_ETIKET: {
             girinti_yaz(f, g);
-            const char *etiket_adi = NULL;
+            const char *etiket_adi = "div";
             switch (d->veri.html_etiket.etiket) {
                 case TOKEN_BASLIK: etiket_adi = "h1"; break;
                 case TOKEN_PARAGRAF: etiket_adi = "p"; break;
@@ -327,9 +367,8 @@ void uret_dugum(FILE *f, ASTDugum *d, int g) {
                         d->veri.html_etiket.metin);
             }
 
-            if (d->veri.html_etiket.govde) {
+            if (d->veri.html_etiket.govde)
                 uret_dugum(f, d->veri.html_etiket.govde, g);
-            }
 
             girinti_yaz(f, g);
             fprintf(f, "ctr_html_kapat(istek, \"%s\");\n", etiket_adi);
@@ -353,10 +392,27 @@ void uret_dugum(FILE *f, ASTDugum *d, int g) {
             fprintf(f, "ctr_durum(istek, %d);\n", d->veri.durum.kod);
             break;
 
-        case AST_HER:
+        case AST_HER: {
             girinti_yaz(f, g);
             fprintf(f, "/* her %s içinde */\n", d->veri.her.degisken);
+            girinti_yaz(f, g);
+            fprintf(f, "{\n");
+            girinti_yaz(f, g+1);
+            fprintf(f, "ctr_liste *__liste = ");
+            uret_ifade(f, d->veri.her.liste);
+            fprintf(f, ";\n");
+            girinti_yaz(f, g+1);
+            fprintf(f, "for (int __i = 0; __i < __liste->sayi; __i++) {\n");
+            girinti_yaz(f, g+2);
+            fprintf(f, "const char *%s = ctr_liste_al(__liste, __i);\n",
+                    d->veri.her.degisken);
+            uret_dugum(f, d->veri.her.govde, g+2);
+            girinti_yaz(f, g+1);
+            fprintf(f, "}\n");
+            girinti_yaz(f, g);
+            fprintf(f, "}\n");
             break;
+        }
 
         case AST_DUR:
             girinti_yaz(f, g);
@@ -376,7 +432,6 @@ void uret_dugum(FILE *f, ASTDugum *d, int g) {
 void uret_program(FILE *f, ASTDugum *kok) {
     fprintf(f, "/* Global değişkenler ve fonksiyonlar */\n\n");
 
-    /* Sayfa fonksiyonları prototipi */
     if (kok && kok->tip == AST_BLOK) {
         int sayfa_no = 0;
         for (int i = 0; i < kok->veri.blok.deyimler->sayi; i++) {
@@ -389,20 +444,14 @@ void uret_program(FILE *f, ASTDugum *kok) {
         fprintf(f, "\n");
     }
 
-    /* Ana kod */
     fprintf(f, "int main(int argc, char **argv) {\n");
     fprintf(f, "    ctr_baslat();\n\n");
 
     if (kok && kok->tip == AST_BLOK) {
         for (int i = 0; i < kok->veri.blok.deyimler->sayi; i++) {
             ASTDugum *d = kok->veri.blok.deyimler->dugumler[i];
-            if (d->tip == AST_SAYFA) {
-                uret_dugum(f, d, 1);
-            } else if (d->tip == AST_ISLEV) {
-                continue;
-            } else {
-                uret_dugum(f, d, 1);
-            }
+            if (d->tip == AST_ISLEV) continue;
+            uret_dugum(f, d, 1);
         }
     }
 
@@ -411,7 +460,6 @@ void uret_program(FILE *f, ASTDugum *kok) {
     fprintf(f, "    return 0;\n");
     fprintf(f, "}\n\n");
 
-    /* Sayfa fonksiyonları */
     if (kok && kok->tip == AST_BLOK) {
         int sayfa_no = 0;
         for (int i = 0; i < kok->veri.blok.deyimler->sayi; i++) {

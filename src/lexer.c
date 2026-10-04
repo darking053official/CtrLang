@@ -27,6 +27,7 @@ static TokenTipi anahtar_kelime(const char *m, size_t u) {
     K("sayı", TOKEN_SAYI_TIP)
     K("metin", TOKEN_METIN_TIP)
     K("mantık", TOKEN_MANTIK_TIP)
+    K("liste", TOKEN_LISTE_TIP)
     K("eğer", TOKEN_EGER)
     K("değilse", TOKEN_DEGILSE)
     K("iken", TOKEN_IKEN)
@@ -56,12 +57,12 @@ static TokenTipi anahtar_kelime(const char *m, size_t u) {
     K("tip", TOKEN_TIP)
     K("içinde", TOKEN_ICINDE)
     K("her", TOKEN_HER)
+
     K("başlık", TOKEN_BASLIK)
     K("paragraf", TOKEN_PARAGRAF)
     K("düğme", TOKEN_DUGME)
     K("girdi", TOKEN_GIRDI)
     K("kutu", TOKEN_KUTU)
-    K("liste", TOKEN_LISTE)
     K("bağlantı", TOKEN_BAGLANTI)
     K("resim", TOKEN_RESIM)
 
@@ -90,12 +91,8 @@ void lexer_baslat(Lexer *lx, const char *kaynak) {
 
 static char ilerle(Lexer *lx) {
     char c = *lx->aktif++;
-    if (c == '\n') {
-        lx->satir++;
-        lx->sutun = 1;
-    } else {
-        lx->sutun++;
-    }
+    if (c == '\n') { lx->satir++; lx->sutun = 1; }
+    else lx->sutun++;
     return c;
 }
 
@@ -105,34 +102,26 @@ static char sonraki(Lexer *lx) { return lx->aktif[0] ? lx->aktif[1] : '\0'; }
 static void bosluk_atla(Lexer *lx) {
     for (;;) {
         char c = aktif(lx);
-        if (bosluk_mi((unsigned char)c) || c == '\n') {
-            ilerle(lx);
-        } else if (c == '#') {
-            while (aktif(lx) != '\n' && aktif(lx) != '\0') ilerle(lx);
-        } else if (c == '/' && sonraki(lx) == '/') {
-            while (aktif(lx) != '\n' && aktif(lx) != '\0') ilerle(lx);
-        } else {
-            break;
-        }
+        if (bosluk_mi((unsigned char)c) || c == '\n') ilerle(lx);
+        else if (c == '#') { while (aktif(lx) != '\n' && aktif(lx) != '\0') ilerle(lx); }
+        else if (c == '/' && sonraki(lx) == '/') { while (aktif(lx) != '\n' && aktif(lx) != '\0') ilerle(lx); }
+        else break;
     }
 }
 
 static Token sayi_oku(Lexer *lx) {
     const char *bas = lx->aktif;
     while (rakam_mi((unsigned char)aktif(lx))) ilerle(lx);
-
     if (aktif(lx) == '.' && rakam_mi((unsigned char)sonraki(lx))) {
         ilerle(lx);
         while (rakam_mi((unsigned char)aktif(lx))) ilerle(lx);
     }
-
     size_t u = (size_t)(lx->aktif - bas);
     Token t = token_yap(TOKEN_SAYI, lx, bas, u);
-
     char buf[64];
-    size_t kopya = u < 63 ? u : 63;
-    memcpy(buf, bas, kopya);
-    buf[kopya] = '\0';
+    size_t k = u < 63 ? u : 63;
+    memcpy(buf, bas, k);
+    buf[k] = '\0';
     t.sayi_deger = atof(buf);
     return t;
 }
@@ -140,33 +129,23 @@ static Token sayi_oku(Lexer *lx) {
 static Token metin_oku(Lexer *lx) {
     ilerle(lx);
     const char *bas = lx->aktif;
-
     while (aktif(lx) != '"' && aktif(lx) != '\0') {
-        if (aktif(lx) == '\\' && sonraki(lx)) {
-            ilerle(lx);
-        }
+        if (aktif(lx) == '\\' && sonraki(lx)) ilerle(lx);
         ilerle(lx);
     }
-
     size_t u = (size_t)(lx->aktif - bas);
     if (aktif(lx) == '"') ilerle(lx);
-
     return token_yap(TOKEN_METIN, lx, bas, u);
 }
 
 static Token isim_oku(Lexer *lx) {
     const char *bas = lx->aktif;
-
-    while (harf_mi((unsigned char)aktif(lx)) ||
-           rakam_mi((unsigned char)aktif(lx))) {
+    while (harf_mi((unsigned char)aktif(lx)) || rakam_mi((unsigned char)aktif(lx))) {
         if ((unsigned char)aktif(lx) >= 0x80) {
             ilerle(lx);
             if ((unsigned char)aktif(lx) >= 0x80) ilerle(lx);
-        } else {
-            ilerle(lx);
-        }
+        } else ilerle(lx);
     }
-
     size_t u = (size_t)(lx->aktif - bas);
     TokenTipi tip = anahtar_kelime(bas, u);
     return token_yap(tip, lx, bas, u);
@@ -174,19 +153,14 @@ static Token isim_oku(Lexer *lx) {
 
 Token lexer_sonraki(Lexer *lx) {
     bosluk_atla(lx);
-
-    if (aktif(lx) == '\0') {
-        return token_yap(TOKEN_EOF, lx, lx->aktif, 0);
-    }
+    if (aktif(lx) == '\0') return token_yap(TOKEN_EOF, lx, lx->aktif, 0);
 
     char c = aktif(lx);
-
     if (rakam_mi((unsigned char)c)) return sayi_oku(lx);
     if (c == '"') return metin_oku(lx);
     if (harf_mi((unsigned char)c)) return isim_oku(lx);
 
     ilerle(lx);
-
     switch (c) {
         case '+': return token_yap(TOKEN_PLUS, lx, lx->aktif-1, 1);
         case '-': return token_yap(TOKEN_MINUS, lx, lx->aktif-1, 1);
@@ -205,20 +179,16 @@ Token lexer_sonraki(Lexer *lx) {
         case '=':
             if (aktif(lx) == '=') { ilerle(lx); return token_yap(TOKEN_ESITTIR, lx, lx->aktif-2, 2); }
             return token_yap(TOKEN_ESIT, lx, lx->aktif-1, 1);
-
         case '!':
             if (aktif(lx) == '=') { ilerle(lx); return token_yap(TOKEN_ESIT_DEGIL, lx, lx->aktif-2, 2); }
             break;
-
         case '<':
             if (aktif(lx) == '=') { ilerle(lx); return token_yap(TOKEN_KUCUK_ESIT, lx, lx->aktif-2, 2); }
             return token_yap(TOKEN_KUCUK, lx, lx->aktif-1, 1);
-
         case '>':
             if (aktif(lx) == '=') { ilerle(lx); return token_yap(TOKEN_BUYUK_ESIT, lx, lx->aktif-2, 2); }
             return token_yap(TOKEN_BUYUK, lx, lx->aktif-1, 1);
     }
-
     return token_yap(TOKEN_HATA, lx, lx->aktif-1, 1);
 }
 
@@ -231,6 +201,8 @@ const char* token_tip_adi(TokenTipi tip) {
         case TOKEN_YAZDIR: return "YAZDIR";
         case TOKEN_SAYI_TIP: return "SAYI_TIP";
         case TOKEN_METIN_TIP: return "METIN_TIP";
+        case TOKEN_MANTIK_TIP: return "MANTIK_TIP";
+        case TOKEN_LISTE_TIP: return "LISTE_TIP";
         case TOKEN_EGER: return "EGER";
         case TOKEN_DEGILSE: return "DEGILSE";
         case TOKEN_DONGU: return "DONGU";
