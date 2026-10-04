@@ -20,8 +20,8 @@ static char* dosya_oku(const char *yol) {
     char *icerik = malloc(boyut + 1);
     if (!icerik) { fclose(f); return NULL; }
     
-    fread(icerik, 1, boyut, f);
-    icerik[boyut] = '\0';
+    size_t okunan = fread(icerik, 1, boyut, f);
+    icerik[okunan] = '\0';
     
     fclose(f);
     return icerik;
@@ -31,8 +31,8 @@ static void kullanim(const char *prog) {
     printf("CtrLang %s\n", CTR_SURUM);
     printf("Kullanım: %s [seçenekler] <dosya.ctr>\n\n", prog);
     printf("Seçenekler:\n");
-    printf("  -o <dosya>    Çıktı C dosyası (varsayılan: <girdi>.c)\n");
-    printf("  --derle       C'ye çevir ve gcc ile derle\n");
+    printf("  -o <dosya>    Çıktı C dosyası\n");
+    printf("  --derle       C'ye çevir ve derle\n");
     printf("  --calistir    Derle ve çalıştır\n");
     printf("  --ast         AST'yi yazdır\n");
     printf("  --token       Token'ları yazdır\n");
@@ -41,7 +41,6 @@ static void kullanim(const char *prog) {
     printf("  --yardim      Bu mesaj\n");
 }
 
-/* Token modu */
 static void token_modu(const char *kaynak) {
     Lexer lx;
     lexer_baslat(&lx, kaynak);
@@ -59,13 +58,23 @@ static void token_modu(const char *kaynak) {
     } while (t.tip != TOKEN_EOF);
 }
 
-/* Derleme */
 static int gcc_derle(const char *c_dosya, const char *cikti) {
-    char komut[1024];
+    char komut[4096];
+    const char *ana = getenv("HOME");
+    if (!ana) ana = ".";
+    
     snprintf(komut, sizeof(komut),
-             "gcc -std=c11 -O2 -I kutuphane -o %s %s kutuphane/*.c -lpthread -lm",
-             cikti, c_dosya);
-    printf("Derleniyor: %s\n", komut);
+        "cc -std=c11 -O2 -w "
+        "-Ikutuphane -Ivendor/mongoose -Ivendor/sqlite "
+        "-Ivendor/cjson -Ivendor/sds -Ivendor/uthash "
+        "-o %s %s "
+        "%s/gecici/ctr_calisma.o %s/gecici/ctr_veritabani.o %s/gecici/ctr_json.o "
+        "%s/gecici/sqlite3.o %s/gecici/mongoose.o %s/gecici/cJSON.o %s/gecici/sds.o "
+        "-lpthread -ldl -lm",
+        cikti, c_dosya,
+        ana, ana, ana,
+        ana, ana, ana, ana);
+    printf("Derleniyor...\n");
     return system(komut);
 }
 
@@ -98,8 +107,10 @@ int main(int argc, char **argv) {
         if (strcmp(argv[i], "--ast") == 0) { ast_modu = 1; continue; }
         if (strcmp(argv[i], "--token") == 0) { token_modu_flag = 1; continue; }
         if (strcmp(argv[i], "--derle") == 0) { derle_flag = 1; continue; }
-        if (strcmp(argv[i], "--calistir") == 0) { 
-            derle_flag = 1; calistir_flag = 1; continue; 
+        if (strcmp(argv[i], "--calistir") == 0) {
+            derle_flag = 1;
+            calistir_flag = 1;
+            continue;
         }
         if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
             cikti = argv[++i];
@@ -113,28 +124,23 @@ int main(int argc, char **argv) {
         return 1;
     }
     
-    /* Dosyayı oku */
     char *kaynak = dosya_oku(girdi);
     if (!kaynak) {
         ctr_hata_basit(HATA_DOSYA, "Dosya açılamadı");
     }
     
-    /* Token modu */
     if (token_modu_flag) {
         token_modu(kaynak);
         free(kaynak);
         return 0;
     }
     
-    /* Bellek */
     Arena *arena = arena_olustur(0);
     
-    /* Parser */
     Parser p;
     parser_baslat(&p, kaynak, arena);
     ASTDugum *kok = parser_calistir(&p);
     
-    /* AST modu */
     if (ast_modu) {
         printf("=== AST ===\n");
         ast_yazdir(kok, 0);
@@ -143,7 +149,6 @@ int main(int argc, char **argv) {
         return 0;
     }
     
-    /* Çıktı dosyası */
     char varsayilan_c[512];
     if (!cikti) {
         snprintf(varsayilan_c, sizeof(varsayilan_c), "%s.c", girdi);
@@ -155,19 +160,17 @@ int main(int argc, char **argv) {
         ctr_hata_basit(HATA_DOSYA, "Çıktı dosyası açılamadı");
     }
     
-    /* C kodu üret */
     uret_baslat(f);
     uret_program(f, kok);
     uret_bitir(f);
-    
     fclose(f);
     
     printf("Üretildi: %s\n", cikti);
     
-    /* Derleme */
     if (derle_flag) {
         char cikti_bin[512];
-        strncpy(cikti_bin, girdi, sizeof(cikti_bin));
+        strncpy(cikti_bin, girdi, sizeof(cikti_bin) - 1);
+        cikti_bin[sizeof(cikti_bin) - 1] = '\0';
         char *nokta = strrchr(cikti_bin, '.');
         if (nokta) *nokta = '\0';
         
