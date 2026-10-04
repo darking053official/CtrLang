@@ -27,7 +27,7 @@ jobs:
             paket: ctrc-linux-arm64.tar.gz
 
           - hedef: macos-x64
-            os: macos-13
+            os: macos-15-intel
             cc: clang
             cikti: ctrc
             paket: ctrc-macos-x64.tar.gz
