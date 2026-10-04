@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CtrLang — Türkçe Backend Web Dili</title>
+<meta name="description" content="Türkçe anahtar kelimelerle yazılan backend web dili. Saf C, SQLite, her platformda.">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; }
+.container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+header { text-align: center; padding: 60px 0; border-bottom: 1px solid #30363d; }
+h1 { font-size: 3em; margin-bottom: 10px; color: #58a6ff; }
+.tagline { font-size: 1.2em; color: #8b949e; margin-bottom: 30px; }
+.badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
+.badges img { height: 20px; }
+.buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn { display: inline-block; padding: 12px 24px; background: #238636; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: all 0.2s; }
+.btn:hover { background: #2ea043; transform: translateY(-2px); }
+.btn.secondary { background: #21262d; border: 1px solid #30363d; }
+.btn.secondary:hover { background: #30363d; }
+section { padding: 60px 0; border-bottom: 1px solid #30363d; }
+h2 { font-size: 2em; margin-bottom: 20px; color: #f0f6fc; }
+h3 { font-size: 1.3em; margin: 20px 0 10px; color: #c9d1d9; }
+.code-block { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 20px; margin: 20px 0; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 0.95em; color: #79c0ff; white-space: pre; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 30px; }
+.feature { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
+.feature h3 { color: #58a6ff; margin-bottom: 10px; font-size: 1.1em; }
+.feature p { color: #8b949e; font-size: 0.95em; }
+footer { text-align: center; padding: 40px 0; color: #8b949e; font-size: 0.9em; }
+footer a { color: #58a6ff; text-decoration: none; }
+a { color: #58a6ff; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>CtrLang</h1>
+<p class="tagline">Türkçe Backend Web Dili</p>
+<div class="badges">
+<img src="https://img.shields.io/badge/Lisans-GPLv3-blue.svg" alt="Lisans">
+<img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Android-green.svg" alt="Platform">
+<img src="https://img.shields.io/badge/Sürüm-0.2.0-orange.svg" alt="Sürüm">
+</div>
+<div class="buttons">
+<a href="https://github.com/darking053official/CtrLang" class="btn">GitHub'da Gör</a>
+<a href="#kurulum" class="btn secondary">İndir</a>
+</div>
+</header>
+
+<section>
+<h2>Nedir?</h2>
+<p>CtrLang, Türkçe anahtar kelimelerle yazılan bir backend web dilidir. PHP ve Node.js'in Türkçe alternatifi olmayı hedefler.</p>
+<div class="code-block">sunucu başlat(3000)
+
+sayfa "/" {
+    yazdır "Merhaba CtrLang!"
+}</div>
+</section>
+
+<section>
+<h2>Özellikler</h2>
+<div class="features">
+<div class="feature">
+<h3>Türkçe Sözdizimi</h3>
+<p>Kod yazarken kendi dilinde düşün: yazdır, eğer, döngü, işlev</p>
+</div>
+<div class="feature">
+<h3>Saf C</h3>
+<p>Hızlı, hafif (~2 MB bellek). Yorumlanan dillere göre 10-100 kat hızlı.</p>
+</div>
+<div class="feature">
+<h3>SQLite</h3>
+<p>Yerleşik veritabanı. Harici sunucu gerekmez.</p>
+</div>
+<div class="feature">
+<h3>HTTP Sunucu</h3>
+<p>Mongoose ile gerçek web sunucusu. Dinamik rotalar, form işleme.</p>
+</div>
+<div class="feature">
+<h3>HTML + JSON</h3>
+<p>Yerleşik üretim. html { } ve json { } blokları.</p>
+</div>
+<div class="feature">
+<h3>Çapraz Platform</h3>
+<p>Linux, macOS, Windows, Android (Termux).</p>
+</div>
+</div>
+</section>
+
+<section id="kurulum">
+<h2>Kurulum</h2>
+<h3>Linux / macOS / Termux</h3>
+<div class="code-block">git clone https://github.com/darking053official/CtrLang.git
+cd CtrLang
+./kur.sh</div>
+<h3>Windows</h3>
+<div class="code-block">git clone https://github.com/darking053official/CtrLang.git
+cd CtrLang
+kur.bat</div>
+</section>
+
+<section>
+<h2>Örnek</h2>
+<div class="code-block">veritabanı bağlan("blog.db")
+
+sayfa "/" {
+    liste yazilar = veritabanı.sorgu("SELECT * FROM yazilar")
+    html {
+        başlık "Blogum"
+        her yazi içinde yazilar {
+            paragraf yazi.baslik
+        }
+    }
+}</div>
+</section>
+
+<section>
+<h2>Bağlantılar</h2>
+<ul style="list-style: none; padding: 0;">
+<li style="margin: 10px 0;"><a href="https://github.com/darking053official/CtrLang">GitHub Deposu</a></li>
+<li style="margin: 10px 0;"><a href="https://github.com/darking053official/CtrLang/releases">Sürümler</a></li>
+<li style="margin: 10px 0;"><a href="https://github.com/darking053official/CtrLang/issues">Sorunlar</a></li>
+</ul>
+</section>
+
+<footer>
+<p>Türkçe programlama için bir adım.</p>
+<p><a href="https://github.com/darking053official/CtrLang">GitHub</a> — GPL v3</p>
+</footer>
+</div>
+</body>
+</html>
