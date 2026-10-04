@@ -16,6 +16,14 @@
 #include "ast.h"
 #include "uret.h"
 
+/* ============ GLOBAL ============ */
+int g_port = 0;
+char g_port_env[128] = {0};
+char g_host[128] = {0};
+int g_debug = 0;
+int g_verbose = 0;
+int g_quiet = 0;
+
 /* ============ DOSYA OKU ============ */
 static char* dosya_oku(const char *yol) {
     FILE *f = fopen(yol, "rb");
@@ -35,6 +43,7 @@ static char* dosya_oku(const char *yol) {
 static void kullanim(const char *prog) {
     printf("CtrLang %s\n", CTR_SURUM);
     printf("Kullanım: %s [komut] [seçenekler] <dosya.ctr>\n\n", prog);
+
     printf("Komutlar:\n");
     printf("  run <dosya>        Derle ve çalıştır\n");
     printf("  build <dosya>      C'ye çevir ve derle\n");
@@ -44,7 +53,19 @@ static void kullanim(const char *prog) {
     printf("  temizle --hepsi    Her şeyi sil\n");
     printf("  listele            Tüm komutlar\n");
     printf("  update             CtrLang'i güncelle\n\n");
-    printf("Seçenekler:\n");
+
+    printf("Sunucu:\n");
+    printf("  -p <port>          Port belirt (örn: -p 8080)\n");
+    printf("                     Ortam: -p \"process.env.PORT\"\n");
+    printf("  -h <host>          Host belirt (varsayılan: 0.0.0.0)\n\n");
+
+    printf("Mod:\n");
+    printf("  -d, --debug        Debug modu\n");
+    printf("  -v, --verbose      Detaylı çıktı\n");
+    printf("  -q, --quiet        Sessiz mod\n");
+    printf("  --no-color         Renksiz çıktı\n\n");
+
+    printf("Diğer:\n");
     printf("  -o <dosya>         Çıktı C dosyası\n");
     printf("  --derle            C'ye çevir ve derle\n");
     printf("  --calistir         Derle ve çalıştır\n");
@@ -58,25 +79,39 @@ static void kullanim(const char *prog) {
 /* ============ KOMUT LİSTESİ ============ */
 static void ctr_listele(void) {
     printf("\n=== CtrLang Komutları ===\n\n");
+
     printf("Çalıştırma:\n");
-    printf("  ctr run <dosya.ctr>          Derle ve çalıştır\n");
-    printf("  ctr build <dosya.ctr>        C'ye çevir ve derle\n");
-    printf("  ctr check <dosya.ctr>        Sözdizimi kontrol\n");
-    printf("  ctr <dosya.ctr>              Sadece C kodu üret\n\n");
+    printf("  ctr run <dosya.ctr>              Derle ve çalıştır\n");
+    printf("  ctr run <dosya.ctr> -p 8080      Port belirt\n");
+    printf("  ctr run <dosya.ctr> -h 0.0.0.0   Host belirt\n");
+    printf("  ctr run <dosya.ctr> -d           Debug modu\n");
+    printf("  ctr run <dosya.ctr> -v           Detaylı çıktı\n");
+    printf("  ctr build <dosya.ctr>            C'ye çevir ve derle\n");
+    printf("  ctr check <dosya.ctr>            Sözdizimi kontrol\n");
+    printf("  ctr <dosya.ctr>                  Sadece C kodu üret\n\n");
+
     printf("Proje:\n");
-    printf("  ctr new <proje>              Yeni proje oluştur\n");
-    printf("  ctr temizle                  Üretilen dosyaları sil\n");
-    printf("  ctr temizle --hepsi          Her şeyi sil\n\n");
+    printf("  ctr new <proje>                  Yeni proje oluştur\n");
+    printf("  ctr temizle                      Üretilen dosyaları sil\n");
+    printf("  ctr temizle --hepsi              Her şeyi sil\n\n");
+
     printf("Debug:\n");
-    printf("  ctr --token <dosya.ctr>      Token'ları göster\n");
-    printf("  ctr --ast <dosya.ctr>        AST'yi göster\n\n");
+    printf("  ctr --token <dosya.ctr>          Token'ları göster\n");
+    printf("  ctr --ast <dosya.ctr>            AST'yi göster\n\n");
+
     printf("Bilgi:\n");
-    printf("  ctr --platform               Platform bilgisi\n");
-    printf("  ctr --surum                  Sürüm\n");
-    printf("  ctr --yardim                 Yardım\n");
-    printf("  ctr listele                  Bu mesaj\n\n");
+    printf("  ctr --platform                   Platform bilgisi\n");
+    printf("  ctr --surum                      Sürüm\n");
+    printf("  ctr --yardim                     Yardım\n");
+    printf("  ctr listele                      Bu mesaj\n\n");
+
     printf("Güncelleme:\n");
-    printf("  ctr update                   CtrLang'i güncelle\n\n");
+    printf("  ctr update                       CtrLang'i güncelle\n\n");
+
+    printf("Örnekler:\n");
+    printf("  ctr run app.ctr -p 3000\n");
+    printf("  ctr run app.ctr -p \"process.env.PORT\" -h 0.0.0.0\n");
+    printf("  ctr run app.ctr -p 8080 -d -v\n\n");
 }
 
 /* ============ TOKEN MODU ============ */
@@ -101,6 +136,7 @@ static int gcc_derle(const char *c_dosya, const char *cikti) {
     char komut[4096];
     const char *ana = getenv("HOME");
     if (!ana) ana = ".";
+
     snprintf(komut, sizeof(komut),
         "cc -std=c11 -O2 -w "
         "-Ikutuphane -Ivendor/mongoose -Ivendor/sqlite "
@@ -112,7 +148,10 @@ static int gcc_derle(const char *c_dosya, const char *cikti) {
         cikti, c_dosya,
         ana, ana, ana,
         ana, ana, ana, ana);
-    printf("Derleniyor...\n");
+
+    if (g_verbose) printf("Komut: %s\n", komut);
+    if (!g_quiet) printf("Derleniyor...\n");
+
     return system(komut);
 }
 
@@ -135,10 +174,12 @@ static void ctr_guncelle(void) {
     }
 #endif
 
-    printf("\n=== CtrLang Güncelleme ===\n\n");
-    printf("Dizin: %s\n\n", dizin);
+    if (!g_quiet) {
+        printf("\n=== CtrLang Güncelleme ===\n\n");
+        printf("Dizin: %s\n\n", dizin);
+        printf("-> git pull...\n");
+    }
 
-    printf("-> git pull...\n");
     char komut[2048];
     snprintf(komut, sizeof(komut), "cd \"%s\" && git pull", dizin);
     if (system(komut) != 0) {
@@ -146,7 +187,8 @@ static void ctr_guncelle(void) {
         exit(1);
     }
 
-    printf("\n-> Yeniden derleniyor...\n");
+    if (!g_quiet) printf("\n-> Yeniden derleniyor...\n");
+
 #ifdef _WIN32
     snprintf(komut, sizeof(komut), "cd \"%s\" && kur.bat", dizin);
 #else
@@ -157,14 +199,16 @@ static void ctr_guncelle(void) {
         exit(1);
     }
 
-    printf("\n=== Güncelleme tamam! ===\n\n");
+    if (!g_quiet) printf("\n=== Güncelleme tamam! ===\n\n");
 }
 
 /* ============ YENİ PROJE ============ */
 static void ctr_yeni_proje(const char *isim) {
     char komut[1024];
-    printf("\n=== Yeni CtrLang Projesi ===\n\n");
-    printf("Proje: %s\n\n", isim);
+    if (!g_quiet) {
+        printf("\n=== Yeni CtrLang Projesi ===\n\n");
+        printf("Proje: %s\n\n", isim);
+    }
 
 #ifdef _WIN32
     snprintf(komut, sizeof(komut), "mkdir \"%s\" 2>nul", isim);
@@ -173,7 +217,6 @@ static void ctr_yeni_proje(const char *isim) {
 #endif
     system(komut);
 
-    /* ana.ctr */
     char yol[512];
     snprintf(yol, sizeof(yol), "%s/ana.ctr", isim);
 
@@ -195,7 +238,6 @@ static void ctr_yeni_proje(const char *isim) {
         isim, isim);
     fclose(f);
 
-    /* README */
     snprintf(yol, sizeof(yol), "%s/README.md", isim);
     f = fopen(yol, "w");
     if (f) {
@@ -211,20 +253,22 @@ static void ctr_yeni_proje(const char *isim) {
         fclose(f);
     }
 
-    printf("Proje oluşturuldu: %s/\n", isim);
-    printf("  %s/ana.ctr\n", isim);
-    printf("  %s/README.md\n\n", isim);
-    printf("Çalıştır:\n");
-    printf("  cd %s\n", isim);
-    printf("  ctr run ana.ctr\n\n");
+    if (!g_quiet) {
+        printf("Proje oluşturuldu: %s/\n", isim);
+        printf("  %s/ana.ctr\n", isim);
+        printf("  %s/README.md\n\n", isim);
+        printf("Çalıştır:\n");
+        printf("  cd %s\n", isim);
+        printf("  ctr run ana.ctr\n\n");
+    }
 }
 
 /* ============ TEMİZLE ============ */
 static void ctr_temizle(int hepsi) {
-    printf("\n=== Temizlik ===\n\n");
+    if (!g_quiet) printf("\n=== Temizlik ===\n\n");
 
     if (hepsi) {
-        printf("-> build/ siliniyor...\n");
+        if (!g_quiet) printf("-> build/ siliniyor...\n");
 #ifdef _WIN32
         system("rmdir /s /q build 2>nul");
         system("del /q ctrc.exe 2>nul");
@@ -234,7 +278,7 @@ static void ctr_temizle(int hepsi) {
 #endif
     }
 
-    printf("-> Üretilen .c dosyaları siliniyor...\n");
+    if (!g_quiet) printf("-> Üretilen .c dosyaları siliniyor...\n");
 #ifdef _WIN32
     system("del /q ornekler\\*.ctr.c 2>nul");
     system("del /q *.ctr.c 2>nul");
@@ -245,7 +289,7 @@ static void ctr_temizle(int hepsi) {
     system("rm -f ornekler/merhaba ornekler/sayfa 2>/dev/null");
 #endif
 
-    printf("\nTemizlendi\n\n");
+    if (!g_quiet) printf("\nTemizlendi\n\n");
 }
 
 /* ============ MAIN ============ */
@@ -262,16 +306,37 @@ int main(int argc, char **argv) {
 
     /* --- Kısayol komutlar --- */
     if (strcmp(argv[1], "run") == 0 && argc >= 3) {
-        char *yeni[] = { argv[0], "--calistir", argv[2], NULL };
-        return main(3, yeni);
+        int yeni_argc = argc - 1;
+        char **yeni = malloc(sizeof(char*) * (yeni_argc + 2));
+        yeni[0] = argv[0];
+        yeni[1] = "--calistir";
+        for (int i = 2; i < argc; i++) yeni[i] = argv[i];
+        yeni[yeni_argc + 1] = NULL;
+        int rc = main(yeni_argc + 1, yeni);
+        free(yeni);
+        return rc;
     }
     if (strcmp(argv[1], "build") == 0 && argc >= 3) {
-        char *yeni[] = { argv[0], "--derle", argv[2], NULL };
-        return main(3, yeni);
+        int yeni_argc = argc - 1;
+        char **yeni = malloc(sizeof(char*) * (yeni_argc + 2));
+        yeni[0] = argv[0];
+        yeni[1] = "--derle";
+        for (int i = 2; i < argc; i++) yeni[i] = argv[i];
+        yeni[yeni_argc + 1] = NULL;
+        int rc = main(yeni_argc + 1, yeni);
+        free(yeni);
+        return rc;
     }
     if (strcmp(argv[1], "check") == 0 && argc >= 3) {
-        char *yeni[] = { argv[0], "--ast", argv[2], NULL };
-        return main(3, yeni);
+        int yeni_argc = argc - 1;
+        char **yeni = malloc(sizeof(char*) * (yeni_argc + 2));
+        yeni[0] = argv[0];
+        yeni[1] = "--ast";
+        for (int i = 2; i < argc; i++) yeni[i] = argv[i];
+        yeni[yeni_argc + 1] = NULL;
+        int rc = main(yeni_argc + 1, yeni);
+        free(yeni);
+        return rc;
     }
     if (strcmp(argv[1], "new") == 0) {
         if (argc < 3) {
@@ -286,22 +351,20 @@ int main(int argc, char **argv) {
         ctr_temizle(hepsi);
         return 0;
     }
-    if (strcmp(argv[1], "listele") == 0) {
-        ctr_listele();
-        return 0;
-    }
-    if (strcmp(argv[1], "yardim") == 0) {
-        kullanim(argv[0]);
-        return 0;
-    }
-    if (strcmp(argv[1], "surum") == 0) {
-        printf("CtrLang %s\n", CTR_SURUM);
-        return 0;
-    }
+    if (strcmp(argv[1], "listele") == 0) { ctr_listele(); return 0; }
+    if (strcmp(argv[1], "yardim") == 0) { kullanim(argv[0]); return 0; }
+    if (strcmp(argv[1], "surum") == 0) { printf("CtrLang %s\n", CTR_SURUM); return 0; }
     if (strcmp(argv[1], "update") == 0 ||
-        strcmp(argv[1], "guncelle") == 0) {
-        ctr_guncelle();
-        return 0;
+        strcmp(argv[1], "guncelle") == 0) { ctr_guncelle(); return 0; }
+
+    /* --- İlk geçiş: modları al --- */
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-d") == 0 ||
+            strcmp(argv[i], "--debug") == 0) g_debug = 1;
+        if (strcmp(argv[i], "-v") == 0 ||
+            strcmp(argv[i], "--verbose") == 0) g_verbose = 1;
+        if (strcmp(argv[i], "-q") == 0 ||
+            strcmp(argv[i], "--quiet") == 0) g_quiet = 1;
     }
 
     /* --- Seçenekler --- */
@@ -320,13 +383,63 @@ int main(int argc, char **argv) {
         if (strcmp(argv[i], "--token") == 0) { token_modu_flag = 1; continue; }
         if (strcmp(argv[i], "--derle") == 0) { derle_flag = 1; continue; }
         if (strcmp(argv[i], "--calistir") == 0) { derle_flag = 1; calistir_flag = 1; continue; }
-        if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) { cikti = argv[++i]; continue; }
+
+        /* Modlar */
+        if (strcmp(argv[i], "-d") == 0 ||
+            strcmp(argv[i], "--debug") == 0) continue;
+        if (strcmp(argv[i], "-v") == 0 ||
+            strcmp(argv[i], "--verbose") == 0) continue;
+        if (strcmp(argv[i], "-q") == 0 ||
+            strcmp(argv[i], "--quiet") == 0) continue;
+        if (strcmp(argv[i], "--no-color") == 0) continue;
+
+        /* Port */
+        if ((strcmp(argv[i], "-p") == 0 ||
+             strcmp(argv[i], "--port") == 0) && i + 1 < argc) {
+            const char *deger = argv[++i];
+            if (strncmp(deger, "process.env.", 12) == 0) {
+                strncpy(g_port_env, deger + 12, sizeof(g_port_env) - 1);
+                g_port_env[sizeof(g_port_env) - 1] = '\0';
+                if (!g_quiet) printf("Port: ortam değişkeni %s\n", g_port_env);
+            } else {
+                g_port = atoi(deger);
+                if (g_port <= 0 || g_port > 65535) {
+                    fprintf(stderr, "Geçersiz port: %s\n", deger);
+                    return 1;
+                }
+                if (!g_quiet) printf("Port: %d\n", g_port);
+            }
+            continue;
+        }
+
+        /* Host */
+        if ((strcmp(argv[i], "-h") == 0 ||
+             strcmp(argv[i], "--host") == 0) && i + 1 < argc) {
+            strncpy(g_host, argv[++i], sizeof(g_host) - 1);
+            g_host[sizeof(g_host) - 1] = '\0';
+            if (!g_quiet) printf("Host: %s\n", g_host);
+            continue;
+        }
+
+        if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
+            cikti = argv[++i];
+            continue;
+        }
+
         girdi = argv[i];
     }
 
     if (!girdi) {
         kullanim(argv[0]);
         return 1;
+    }
+
+    /* Debug modu bilgisi */
+    if (g_debug) {
+        fprintf(stderr, "[DEBUG] Dosya: %s\n", girdi);
+        if (g_port > 0) fprintf(stderr, "[DEBUG] Port: %d\n", g_port);
+        if (g_port_env[0]) fprintf(stderr, "[DEBUG] Port env: %s\n", g_port_env);
+        if (g_host[0]) fprintf(stderr, "[DEBUG] Host: %s\n", g_host);
     }
 
     char *kaynak = dosya_oku(girdi);
@@ -369,7 +482,7 @@ int main(int argc, char **argv) {
     uret_bitir(f);
     fclose(f);
 
-    printf("Üretildi: %s\n", cikti);
+    if (!g_quiet) printf("Üretildi: %s\n", cikti);
 
     if (derle_flag) {
         char cikti_bin[512];
@@ -382,7 +495,7 @@ int main(int argc, char **argv) {
             ctr_hata_basit(HATA_URET, "Derleme başarısız");
         }
 
-        printf("Derlendi: %s\n", cikti_bin);
+        if (!g_quiet) printf("Derlendi: %s\n", cikti_bin);
 
         if (calistir_flag) {
             char komut[512];

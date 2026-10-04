@@ -3,28 +3,20 @@
 
 #include <stddef.h>
 
-/* İstek yapısı */
 typedef struct ctr_istek {
     char yol[512];
     char yontem[16];
     char govde[8192];
     size_t govde_uzunluk;
     void *ic;
-    
-    struct {
-        char isim[64];
-        char deger[512];
-    } form[32];
+
+    struct { char isim[64]; char deger[512]; } form[32];
     int form_sayi;
-    
-    struct {
-        char isim[64];
-        char deger[512];
-    } sorgu[32];
+
+    struct { char isim[64]; char deger[512]; } sorgu[32];
     int sorgu_sayi;
 } ctr_istek;
 
-/* Sayfa fonksiyonu */
 typedef void (*ctr_sayfa_fonksiyonu)(ctr_istek *istek);
 
 /* Başlat / Bitir */
@@ -38,12 +30,15 @@ void ctr_yazdir_sayi(double sayi);
 /* Sayı → metin */
 const char* ctr_sayi_metin(double sayi);
 
+/* Ortam değişkeninden port oku */
+double ctr_env_port(const char *isim, double varsayilan);
+
 /* Sayfa kayıt */
 void ctr_sayfa_ekle(const char *yol, const char *yontem,
                      ctr_sayfa_fonksiyonu fonk);
 
-/* Sunucu */
-void ctr_sunucu_baslat(double port);
+/* Sunucu (host + port) */
+void ctr_sunucu_baslat(double port, const char *host);
 void ctr_sunucu_dongu(void);
 
 /* HTML */
