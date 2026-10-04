@@ -4,16 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CtrLang — Türkçe Backend Web Dili</title>
-<meta name="description" content="Türkçe anahtar kelimelerle yazılan backend web dili. Saf C, SQLite, her platformda.">
+<meta name="description" content="Türkçe anahtar kelimelerle yazılan backend web dili.">
+<link rel="icon" type="image/png" href="logo_ctr.png">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; }
 .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-header { text-align: center; padding: 60px 0; border-bottom: 1px solid #30363d; }
+header { text-align: center; padding: 40px 0 60px; border-bottom: 1px solid #30363d; }
+.logo { width: 120px; height: 120px; margin-bottom: 20px; }
 h1 { font-size: 3em; margin-bottom: 10px; color: #58a6ff; }
 .tagline { font-size: 1.2em; color: #8b949e; margin-bottom: 30px; }
 .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
 .badges img { height: 20px; }
+.install-box { display: flex; align-items: center; gap: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; margin: 20px auto 30px; max-width: 700px; justify-content: space-between; font-family: 'Courier New', monospace; }
+.install-box code { color: #79c0ff; font-size: 0.9em; overflow-x: auto; white-space: nowrap; flex: 1; text-align: left; }
+.kopyala { background: #238636; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85em; transition: all 0.2s; white-space: nowrap; }
+.kopyala:hover { background: #2ea043; }
+.kopyala.kopyalandi { background: #1f6feb; }
+@media (max-width: 600px) { .install-box { flex-direction: column; align-items: stretch; } .install-box code { font-size: 0.75em; text-align: center; } }
 .buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .btn { display: inline-block; padding: 12px 24px; background: #238636; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; transition: all 0.2s; }
 .btn:hover { background: #2ea043; transform: translateY(-2px); }
@@ -35,12 +43,17 @@ a { color: #58a6ff; }
 <body>
 <div class="container">
 <header>
+<img src="logo_ctr.png" alt="CtrLang" class="logo">
 <h1>CtrLang</h1>
 <p class="tagline">Türkçe Backend Web Dili</p>
 <div class="badges">
 <img src="https://img.shields.io/badge/Lisans-GPLv3-blue.svg" alt="Lisans">
 <img src="https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Android-green.svg" alt="Platform">
 <img src="https://img.shields.io/badge/Sürüm-0.2.0-orange.svg" alt="Sürüm">
+</div>
+<div class="install-box">
+<code id="install-komut">curl -fsSL https://darking053official.github.io/CtrLang/install.sh | sh</code>
+<button class="kopyala" onclick="kopyala()" id="kopyala-btn">Kopyala</button>
 </div>
 <div class="buttons">
 <a href="https://github.com/darking053official/CtrLang" class="btn">GitHub'da Gör</a>
@@ -61,36 +74,20 @@ sayfa "/" {
 <section>
 <h2>Özellikler</h2>
 <div class="features">
-<div class="feature">
-<h3>Türkçe Sözdizimi</h3>
-<p>Kod yazarken kendi dilinde düşün: yazdır, eğer, döngü, işlev</p>
-</div>
-<div class="feature">
-<h3>Saf C</h3>
-<p>Hızlı, hafif (~2 MB bellek). Yorumlanan dillere göre 10-100 kat hızlı.</p>
-</div>
-<div class="feature">
-<h3>SQLite</h3>
-<p>Yerleşik veritabanı. Harici sunucu gerekmez.</p>
-</div>
-<div class="feature">
-<h3>HTTP Sunucu</h3>
-<p>Mongoose ile gerçek web sunucusu. Dinamik rotalar, form işleme.</p>
-</div>
-<div class="feature">
-<h3>HTML + JSON</h3>
-<p>Yerleşik üretim. html { } ve json { } blokları.</p>
-</div>
-<div class="feature">
-<h3>Çapraz Platform</h3>
-<p>Linux, macOS, Windows, Android (Termux).</p>
-</div>
+<div class="feature"><h3>Türkçe Sözdizimi</h3><p>Kod yazarken kendi dilinde düşün: yazdır, eğer, döngü, işlev</p></div>
+<div class="feature"><h3>Saf C</h3><p>Hızlı, hafif (~2 MB bellek).</p></div>
+<div class="feature"><h3>SQLite</h3><p>Yerleşik veritabanı. Harici sunucu gerekmez.</p></div>
+<div class="feature"><h3>HTTP Sunucu</h3><p>Mongoose ile gerçek web sunucusu.</p></div>
+<div class="feature"><h3>HTML + JSON</h3><p>Yerleşik üretim. html { } ve json { } blokları.</p></div>
+<div class="feature"><h3>Çapraz Platform</h3><p>Linux, macOS, Windows, Android (Termux).</p></div>
 </div>
 </section>
 
 <section id="kurulum">
 <h2>Kurulum</h2>
-<h3>Linux / macOS / Termux</h3>
+<h3>Tek Komut (Linux / macOS / Termux)</h3>
+<div class="code-block">curl -fsSL https://darking053official.github.io/CtrLang/install.sh | sh</div>
+<h3>Manuel</h3>
 <div class="code-block">git clone https://github.com/darking053official/CtrLang.git
 cd CtrLang
 ./kur.sh</div>
@@ -129,5 +126,25 @@ sayfa "/" {
 <p><a href="https://github.com/darking053official/CtrLang">GitHub</a> — GPL v3</p>
 </footer>
 </div>
+
+<script>
+function kopyala() {
+    const komut = document.getElementById('install-komut').textContent;
+    const btn = document.getElementById('kopyala-btn');
+    navigator.clipboard.writeText(komut).then(() => {
+        btn.textContent = 'Kopyalandi';
+        btn.classList.add('kopyalandi');
+        setTimeout(() => { btn.textContent = 'Kopyala'; btn.classList.remove('kopyalandi'); }, 2000);
+    }).catch(() => {
+        const range = document.createRange();
+        range.selectNode(document.getElementById('install-komut'));
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        btn.textContent = 'Kopyalandi';
+        setTimeout(() => { btn.textContent = 'Kopyala'; }, 2000);
+    });
+}
+</script>
 </body>
 </html>
