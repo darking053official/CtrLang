@@ -1,0 +1,27 @@
+PackageIdentifier: darking053official.CtrLang
+PackageVersion: 0.2.0
+PackageLocale: tr-TR
+Publisher: darking053official
+PublisherUrl: https://github.com/darking053official
+PublisherSupportUrl: https://github.com/darking053official/CtrLang/issues
+PackageName: CtrLang
+PackageUrl: https://github.com/darking053official/CtrLang
+License: GPL-3.0
+LicenseUrl: https://github.com/darking053official/CtrLang/blob/main/LICENSE
+ShortDescription: Türkçe backend web dili
+Description: CtrLang, Türkçe anahtar kelimelerle yazılan bir backend web dilidir. Saf C, SQLite ve Mongoose kullanır.
+Moniker: ctr
+Tags:
+  - programming-language
+  - web
+  - turkish
+  - c
+  - sqlite
+  - web-framework
+InstallerType: zip
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/darking053official/CtrLang/releases/download/v0.2.0/ctrc-windows-x64.zip
+    InstallerSha256: 5bbdfca6546eaa8a6f9f0b8a34714145424329748b44b338d2e8700fba6296fe
+ManifestType: singleton
+ManifestVersion: 1.6.0
