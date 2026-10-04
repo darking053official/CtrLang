@@ -1,7 +1,5 @@
 <div align="center">
-
-<img src="resimler/deepseek.png" width="120" alt="DeepSeek">
-
+    
 # 🌐 CtrLang
 
 ### Türkçe Backend Web Dili
