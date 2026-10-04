@@ -1,0 +1,6 @@
+# merhaba.ctr
+sunucu başlat(3000)
+
+sayfa "/" {
+    yazdır "Merhaba CtrLang!"
+}
