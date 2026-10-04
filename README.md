@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src=".github/deepseek.png" width="120" alt="DeepSeek">
+<img src="resimler/deepseek.png" width="120" alt="DeepSeek">
 
 # 🌐 CtrLang
 
