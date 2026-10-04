@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/darking053official/CtrLang/main/.github/logo.png" width="120" alt="CtrLang">
+<img src="https://upload.wikimedia.org/wikipedia/commons/9/95/DeepSeek-icon.svg" width="120" alt="CtrLang">
 
 # 🌐 CtrLang
 
