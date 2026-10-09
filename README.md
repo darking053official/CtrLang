@@ -8,10 +8,15 @@
 [![C11](https://img.shields.io/badge/C-C11-blue.svg)]()
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Android-green.svg)]()
 [![Sürüm](https://img.shields.io/badge/Sürüm-0.2.0-orange.svg)](https://github.com/darking053official/CtrLang/releases)
+[![Kurulum](https://img.shields.io/badge/Kur-blue.svg)](https://darking053official.github.io/CtrLang/)
 
 [Site](https://darking053official.github.io/CtrLang/) · [Özellikler](#özellikler) · [Kurulum](#kurulum) · [Dil Referansı](#dil-referansı) · [Örnekler](#örnekler)
 
 ---
+## Kur. Tek komut. Linux-Termux-Mac
+```sh
+curl -fsSL https://darking053official.github.io/CtrLang/install.sh | sh
+```
 
 ## Nedir?
 
